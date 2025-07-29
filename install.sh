@@ -7,6 +7,7 @@ read -rp "Enter target disk (e.g., /dev/nvme0n1): " DISK
 read -rp "Enter hostname: " HOSTNAME
 read -rp "Enter username: " USERNAME
 read -s -rp "Enter password for $USERNAME (and root): " PASSWORD
+read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
 
 echo
 
@@ -71,7 +72,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 # --- Chroot & Configure System ---
 echo "[*] Configuring system..."
 arch-chroot /mnt /bin/bash <<EOF
-ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
 echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 locale-gen
