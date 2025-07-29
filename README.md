@@ -1,7 +1,7 @@
 # Arch-Installation-Script-Dotfiles
 This is my personal Arch Installation script (it also installs my dotfiles)
 
-install using `curl -sSL https://tinyurl.com/zai1208-arch | sh`
+install using `curl -sSL https://tinyurl.com/zai1208-arch | sh` after connecting to internet and syncing date & time
 
 # Dotfiles
 > [!CAUTION]
