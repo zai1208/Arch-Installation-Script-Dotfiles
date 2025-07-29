@@ -23,10 +23,15 @@ parted --script $DISK \
     mkpart primary ext4 512MiB 100%
 
 mkfs.fat -F32 ${DISK}p1
-mkfs.ext4 -L rootfs ${DISK}p2
+
+echo "[*] Setting up LUKS encryption on ${DISK}p2..."
+echo -n "$PASSWORD" | cryptsetup luksFormat ${DISK}p2 -
+echo -n "$PASSWORD" | cryptsetup open ${DISK}p2 cryptroot -
+
+mkfs.ext4 /dev/mapper/cryptroot
 
 # --- Mount Partitions ---
-mount ${DISK}p2 /mnt
+mount /dev/mapper/cryptroot /mnt
 mount --mkdir ${DISK}p1 /mnt/boot
 
 # --- Pacstrap variables ---
@@ -35,9 +40,8 @@ DEV_PACKAGES=(git networkmanager)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty)
 APPS_PACKAGES=(atril chromium)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire)
-FONT-CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
+FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 EXTRA_PACKAGES=(neofetch)
-
 
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
@@ -56,7 +60,7 @@ echo "[*] Installing remaining utilities with pacstrap..."
 pacstrap -K /mnt "${UTIL_PACKAGES[@]}"
 
 echo "[*] Installing fonts and cursor with pacstrap..." 
-pacstrap -K /mnt "${FONT-CURSOR_PACKAGES[@]}"
+pacstrap -K /mnt "${FONT_CURSOR_PACKAGES[@]}"
 
 echo "[*] Installing extras with pacstrap..." 
 pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
@@ -80,9 +84,29 @@ useradd -mG wheel $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
+# Setup crypttab
+echo "cryptroot UUID=$(blkid -s UUID -o value ${DISK}p2) none luks" >> /etc/crypttab
+
+# Enable encrypt hook in mkinitcpio
+sed -i 's/HOOKS=(base udev autodetect.*)/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+mkinitcpio -P
+
+# GRUB installation and configuration
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+
+UUID=\$(blkid -s UUID -o value ${DISK}p2)
+sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=\$UUID:cryptroot root=/dev/mapper/cryptroot\"|" /etc/default/grub
+echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
+
+# Enable autologin on tty1
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat <<EOL2 > /etc/systemd/system/getty@tty1.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=-/usr/bin/agetty --autologin $USERNAME --noclear %I \\$TERM
+EOL2
 
 systemctl enable NetworkManager
 systemctl enable cups.service
