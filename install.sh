@@ -42,7 +42,7 @@ HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww)
 APPS_PACKAGES=(atril chromium)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
-EXTRA_PACKAGES=(neofetch)
+EXTRA_PACKAGES=(neofetch cmatrix)
 
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
