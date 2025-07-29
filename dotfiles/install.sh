@@ -1,3 +1,3 @@
-$dotfiles_dir=~/dotfiles
+dotfiles_dir=~/dotfiles
 
 ln -sf $dotfiles_dir/.config ~/.config
