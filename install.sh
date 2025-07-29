@@ -31,8 +31,8 @@ mount --mkdir ${DISK}p1 /mnt/boot
 
 # --- Pacstrap Installation ---
 echo "[*] Installing full system with pacstrap..."
-pacstrap -K /mnt base base-devel linux linux-firmware git sudo networkmanager hyprland waybar fuzzel neofetch \
-            amd-ucode man-db man-pages texinfo vim alacritty pipewire atril cups cups-pdf cups-filters cups-pk-helper \
+pacstrap -K /mnt base base-devel linux linux-firmware git networkmanager hyprland waybar fuzzel neofetch \
+            amd-ucode man-db man-pages vim alacritty pipewire atril cups cups-pdf cups-filters cups-pk-helper \
             archlinux-keyring chromium adwaita-cursors
 
 # --- Generate fstab ---
