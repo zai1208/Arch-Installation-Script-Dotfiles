@@ -64,7 +64,7 @@ EOF
 echo "[*] Cloning dotfiles for $USERNAME..."
 arch-chroot /mnt /bin/bash <<EOF
 cd ~
-sudo -u $USERNAME git clone https://arch-installation-script-dotfiles.git dotfiles
+sudo -u $USERNAME git clone https://zai1208/dotfiles.git
 cd dotfiles
 sudo -u $USERNAME ./install.sh
 EOF
