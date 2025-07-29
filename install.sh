@@ -33,7 +33,7 @@ mount --mkdir ${DISK}p1 /mnt/boot
 echo "[*] Installing base system with pacstrap..."
 pacstrap -K /mnt base base-devel linux linux-firmware git sudo networkmanager hyprland waybar fuzzel neofetch \
             amd-ucode man-db man-pages texinfo vim alacritty pipewire atril cups cups-pdf cups-filters cups-pk-helper \
-            archlinux-keyring chromium 
+            archlinux-keyring chromium adwaita-cursors
 
 # --- Generate fstab ---
 genfstab -U /mnt >> /mnt/etc/fstab
