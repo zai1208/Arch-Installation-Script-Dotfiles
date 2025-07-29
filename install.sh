@@ -30,10 +30,26 @@ mount ${DISK}p2 /mnt
 mount --mkdir ${DISK}p1 /mnt/boot
 
 # --- Pacstrap Installation ---
-echo "[*] Installing full system with pacstrap..."
-pacstrap -K /mnt base base-devel linux linux-firmware git networkmanager hyprland waybar fuzzel neofetch \
-            amd-ucode man-db man-pages vim alacritty pipewire atril cups cups-pdf cups-filters cups-pk-helper \
-            archlinux-keyring chromium adwaita-cursors
+echo "[*] Installing base system with pacstrap..."
+pacstrap -K /mnt base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring
+
+echo "[*] Installing Dev utilities + networkmanager with pacstrap..."
+pacstrap -K /mnt git networkmanager
+
+echo "[*] Installing Hyprland + apps needed by Hyprland with pacstrap..."
+pacstrap -K /mnt hyprland waybar fuzzel alacritty
+
+echo "[*] Installing other apps with pacstrap..."
+pacstrap -K /mnt atril chromium
+
+echo "[*] Installing remaining utilities with pacstrap..." 
+pacstrap -K /mnt cups cups-pdf cups-filters cups-pk-helper pipewire
+
+echo "[*] Installing fonts and cursor with pacstrap..." 
+pacstrap -K /mnt adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols
+
+echo "[*] Installing extras with pacstrap..." 
+pacstrap -K /mnt neofetch
 
 # --- Generate fstab ---
 genfstab -U /mnt >> /mnt/etc/fstab
