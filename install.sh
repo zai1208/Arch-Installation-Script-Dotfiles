@@ -27,8 +27,7 @@ mkfs.ext4 -L rootfs ${DISK}p2
 
 # --- Mount Partitions ---
 mount ${DISK}p2 /mnt
-mkdir /mnt/boot
-mount ${DISK}p1 /mnt/boot
+mount --mkdir ${DISK}p1 /mnt/boot
 
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
