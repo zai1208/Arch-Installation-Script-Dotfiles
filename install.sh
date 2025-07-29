@@ -29,32 +29,43 @@ mkfs.ext4 -L rootfs ${DISK}p2
 mount ${DISK}p2 /mnt
 mount --mkdir ${DISK}p1 /mnt/boot
 
+# --- Pacstrap variables ---
+BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring)
+DEV_PACKAGES=(git networkmanager)
+HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty)
+APPS_PACKAGES=(atril chromium)
+UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire)
+FONT-CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
+EXTRA_PACKAGES=(neofetch)
+
+
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
-pacstrap -K /mnt base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring
+pacstrap -K /mnt "${BASE_PACKAGES[@]}"
 
 echo "[*] Installing Dev utilities + networkmanager with pacstrap..."
-pacstrap -K /mnt git networkmanager
+pacstrap -K /mnt "${DEV_PACKAGES[@]}"
 
 echo "[*] Installing Hyprland + apps needed by Hyprland with pacstrap..."
-pacstrap -K /mnt hyprland waybar fuzzel alacritty
+pacstrap -K /mnt "${HYPRLAND_PACKAGES[@]}"
 
 echo "[*] Installing other apps with pacstrap..."
-pacstrap -K /mnt atril chromium
+pacstrap -K /mnt "${APPS_PACKAGES[@]}"
 
 echo "[*] Installing remaining utilities with pacstrap..." 
-pacstrap -K /mnt cups cups-pdf cups-filters cups-pk-helper pipewire
+pacstrap -K /mnt "${UTIL_PACKAGES[@]}"
 
 echo "[*] Installing fonts and cursor with pacstrap..." 
-pacstrap -K /mnt adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols
+pacstrap -K /mnt "${FONT-CURSOR_PACKAGES[@]}"
 
 echo "[*] Installing extras with pacstrap..." 
-pacstrap -K /mnt neofetch
+pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
 
 # --- Generate fstab ---
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # --- Chroot & Configure System ---
+echo "[*] Configuring system..."
 arch-chroot /mnt /bin/bash <<EOF
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 hwclock --systohc
