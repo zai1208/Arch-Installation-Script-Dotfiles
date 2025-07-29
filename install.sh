@@ -37,7 +37,7 @@ mount --mkdir ${DISK}p1 /mnt/boot
 # --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring)
 DEV_PACKAGES=(git networkmanager)
-HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty)
+HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww)
 APPS_PACKAGES=(atril chromium)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
@@ -83,6 +83,10 @@ echo "root:$PASSWORD" | chpasswd
 useradd -mG wheel $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
+
+mkswap --size 4G --file /swapfile
+swapon /swapfile
+echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
 # Setup crypttab
 echo "cryptroot UUID=$(blkid -s UUID -o value ${DISK}p2) none luks" >> /etc/crypttab
