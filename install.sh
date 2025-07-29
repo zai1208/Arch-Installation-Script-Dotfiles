@@ -96,6 +96,9 @@ echo "cryptroot UUID=$(blkid -s UUID -o value ${DISK}p2) none luks" >> /etc/cryp
 sed -i 's/HOOKS=(base udev autodetect.*)/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
+# Enable pacman eye-candy features
+sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/pacman.conf
+
 # GRUB installation and configuration
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
