@@ -63,11 +63,10 @@ EOF
 # --- Dotfiles Deployment ---
 echo "[*] Cloning dotfiles for $USERNAME..."
 arch-chroot /mnt /bin/bash <<EOF
-sudo -u $USERNAME git clone https://arch-installation-script-dotfiles.git
-cd arch-installation-script-dotfiles
+cd ~
+sudo -u $USERNAME git clone https://arch-installation-script-dotfiles.git dotfiles
+cd dotfiles
 sudo -u $USERNAME ./install.sh
-cd ..
-rm -rf arch-installation-script-dotfiles
 EOF
 
 # --- Finished ---
