@@ -1,1 +1,1 @@
-cp hyprland.conf ~/.conf/hypr/hyprland.conf
+cp * ~/.config/
