@@ -8,3 +8,5 @@ install using `curl -sSL https://tinyurl.com/zai1208-arch | sh`
 > The dotfiles have not been uploaded yet so this script is not yet ready for production
 
 The dotfiles are installed by the script as well and are stored to `~/dotfiles/`
+
+My dotfiles also contain a font `HackNerdFontMono-Regular.ttf` which is my preferred font for alacritty
