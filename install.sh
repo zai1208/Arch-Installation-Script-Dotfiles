@@ -40,7 +40,7 @@ BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-uco
 DEV_PACKAGES=(git networkmanager)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww)
 APPS_PACKAGES=(atril chromium)
-UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire)
+UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pavucontrol)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 EXTRA_PACKAGES=(fastfetch cmatrix)
 
@@ -126,7 +126,19 @@ arch-chroot /mnt /bin/bash <<EOF
 cd ~
 sudo -u $USERNAME git clone https://zai1208/dotfiles.git
 cd dotfiles
+chmod +x install.sh
 sudo -u $USERNAME ./install.sh
+EOF
+
+# --- Dotfiles Deployment ---
+echo "[*] Installing yay"
+arch-chroot /mnt /bin/bash <<EOF
+cd ~
+sudo -u $USERNAME git clone https://aur.archlinux.org/yay.git
+cd yay
+sudo -u $USERNAME makepkg -si
+cd ..
+rm -rf yay
 EOF
 
 # --- Finished ---
