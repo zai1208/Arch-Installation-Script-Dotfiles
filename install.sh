@@ -39,7 +39,7 @@ mount --mkdir ${DISK}p1 /mnt/boot
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring)
 DEV_PACKAGES=(git networkmanager)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
-APPS_PACKAGES=(atril chromium)
+APPS_PACKAGES=(atril chromium gimp)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pavucontrol)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 EXTRA_PACKAGES=(fastfetch cmatrix)
