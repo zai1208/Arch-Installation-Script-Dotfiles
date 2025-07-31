@@ -44,6 +44,13 @@ UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pavucontrol)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 EXTRA_PACKAGES=(fastfetch cmatrix)
 
+# --- Fix PGP Keyring Errors ---
+echo "[*] Re-initializing pacman keyring in live environment..."
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy archlinux-keyring --noconfirm
+
+
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
 pacstrap -K /mnt "${BASE_PACKAGES[@]}"
