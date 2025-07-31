@@ -13,7 +13,7 @@ echo
 
 # --- Pre-Checks ---
 echo "[*] Checking Internet connectivity..."
-ping -c 1 archlinux.org || { echo "No Internet! Aborting..."; exit 1; }
+#ping -c 1 archlinux.org || { echo "No Internet! Aborting..."; exit 1; }
 
 # --- Partition Disk ---
 echo "[*] Partitioning $DISK..."
