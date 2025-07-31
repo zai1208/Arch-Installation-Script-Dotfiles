@@ -7,6 +7,6 @@ install using `bash <(curl -sSL https://tinyurl.com/zai1208-arch)` after connect
 > [!NOTE]
 > My waybar dotfiles have not been uploaded yet (they are based on the ml4w dotfiles)
 
-The dotfiles (found [here](https://github.com/zai1208/dotfiles)) are installed by the script as well and are stored to `~/dotfiles/`
+My dotfiles (found [here](https://github.com/zai1208/dotfiles)) are installed by the script as well and are stored to `~/dotfiles/`
 
 They include an Endeavour OS wallpaper
