@@ -126,7 +126,7 @@ EOF
 # --- Dotfiles Deployment ---
 echo "[*] Cloning dotfiles for $USERNAME..."
 arch-chroot /mnt /bin/bash <<EOF
-cd ~
+cd /home/$USERNAME/
 git clone https://zai1208/dotfiles.git
 cd dotfiles
 chmod +x install.sh
@@ -136,8 +136,8 @@ EOF
 # --- Dotfiles Deployment ---
 echo "[*] Installing yay"
 arch-chroot /mnt /bin/bash <<EOF
-cd ~
-sudo -u $USERNAME git clone https://aur.archlinux.org/yay.git
+cd /home/$USERNAME/
+git clone https://aur.archlinux.org/yay.git
 cd yay
 sudo -u $USERNAME makepkg -si
 cd ..
