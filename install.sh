@@ -139,7 +139,8 @@ arch-chroot /mnt /bin/bash <<EOF
 cd /home/$USERNAME/
 git clone https://aur.archlinux.org/yay.git
 cd yay
-sudo -u $USERNAME makepkg -si
+su #$USERNAME
+makepkg -si
 cd ..
 rm -rf yay
 EOF
