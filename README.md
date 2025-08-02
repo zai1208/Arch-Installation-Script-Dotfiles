@@ -1,7 +1,10 @@
 # Arch-Installation-Script-Dotfiles
+> [!NOTE]
+> This is the ARM version of the script
+
 This is my personal Arch Installation script (it also installs my dotfiles)
 
-install using `bash <(curl -sSL https://tinyurl.com/zai1208-arch)` after connecting to internet
+install using `bash <(curl -sSL https://tinyurl.com/zai1208-arch-arm)` after connecting to internet
 
 Note that this script takes a long time to install (~40 minutes) so you may want to get a coffee or something after the initial prompts
 
