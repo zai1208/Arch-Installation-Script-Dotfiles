@@ -32,7 +32,7 @@ mount /dev/mapper/cryptroot /mnt
 mount --mkdir ${DISK}p1 /mnt/boot
 
 # --- Pacstrap variables ---
-BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinux-keyring)
+BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim amd-ucode archlinuxarm-keyring)
 DEV_PACKAGES=(git networkmanager)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
 APPS_PACKAGES=(atril chromium gimp)
@@ -43,8 +43,8 @@ EXTRA_PACKAGES=(fastfetch cmatrix)
 # --- Fix PGP Keyring Errors ---
 echo "[*] Re-initializing pacman keyring in live environment..."
 pacman-key --init
-pacman-key --populate archlinux
-pacman -Sy archlinux-keyring --noconfirm
+pacman-key --populate archlinuxarm
+pacman -Sy archlinuxarm-keyring --noconfirm
 
 
 # --- Pacstrap Installation ---
