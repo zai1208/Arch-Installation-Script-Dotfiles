@@ -7,9 +7,8 @@ read -rp "Enter target disk (e.g., /dev/nvme0n1): " DISK
 read -rp "Enter hostname: " HOSTNAME
 read -rp "Enter username: " USERNAME
 read -s -rp "Enter password for $USERNAME (and root): " PASSWORD
-read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
-
 echo
+read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
 
 # --- Partition Disk ---
 echo "[*] Partitioning $DISK..."
@@ -19,17 +18,32 @@ parted --script $DISK \
     set 1 esp on \
     mkpart primary ext4 512MiB 100%
 
-mkfs.fat -F32 ${DISK}1
+if [[ "$DISK" == *nvme* ]]; then
+  mkfs.fat -F32 ${DISK}p1
+else
+  mkfs.fat -F32 ${DISK}1
+fi
 
-echo "[*] Setting up LUKS encryption on ${DISK}2..."
-echo -n "$PASSWORD" | cryptsetup luksFormat ${DISK}2 -
-echo -n "$PASSWORD" | cryptsetup open ${DISK}2 cryptroot -
+if [[ "$DISK" == *nvme* ]]; then
+  PART2="${DISK}p2"
+else
+  PART2="${DISK}2"
+fi
+
+echo "[*] Setting up LUKS encryption on ${PART2}..."
+echo -n "$PASSWORD" | cryptsetup luksFormat ${PART2} -
+echo -n "$PASSWORD" | cryptsetup open ${PART2} cryptroot -
 
 mkfs.ext4 /dev/mapper/cryptroot
 
 # --- Mount Partitions ---
 mount /dev/mapper/cryptroot /mnt
-mount --mkdir ${DISK}1 /mnt/boot
+if [[ "$DISK" == *nvme* ]]; then
+  mount --mkdir ${DISK}p1 /mnt/boot
+else
+  mount --mkdir ${DISK}1 /mnt/boot
+fi
+
 
 # --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinuxarm-keyring)
@@ -46,7 +60,6 @@ pacman-key --init
 pacman-key --populate archlinuxarm
 pacman -Sy archlinuxarm-keyring --noconfirm
 
-
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
 pacstrap -K /mnt "${BASE_PACKAGES[@]}"
@@ -60,13 +73,13 @@ pacstrap -K /mnt "${HYPRLAND_PACKAGES[@]}"
 echo "[*] Installing other apps with pacstrap..."
 pacstrap -K /mnt "${APPS_PACKAGES[@]}"
 
-echo "[*] Installing remaining utilities with pacstrap..." 
+echo "[*] Installing remaining utilities with pacstrap..."
 pacstrap -K /mnt "${UTIL_PACKAGES[@]}"
 
-echo "[*] Installing fonts and cursor with pacstrap..." 
+echo "[*] Installing fonts and cursor with pacstrap..."
 pacstrap -K /mnt "${FONT_CURSOR_PACKAGES[@]}"
 
-echo "[*] Installing extras with pacstrap..." 
+echo "[*] Installing extras with pacstrap..."
 pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
 
 # --- Generate fstab ---
@@ -74,6 +87,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 # --- Chroot & Configure System ---
 echo "[*] Configuring system..."
+
 arch-chroot /mnt /bin/bash <<EOF
 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
@@ -93,10 +107,10 @@ swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
 # Setup crypttab
-echo "cryptroot UUID=$(blkid -s UUID -o value ${DISK}p2) none luks" >> /etc/crypttab
+echo "cryptroot UUID=$(blkid -s UUID -o value $PART2) none luks" >> /etc/crypttab
 
 # Enable encrypt hook in mkinitcpio
-sed -i 's/HOOKS=(base udev autodetect.*)/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
 # Enable pacman eye-candy features
@@ -106,9 +120,9 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 
-ROOTUUID=$(blkid -s UUID -o value ${DISK}p2)
-UUID=$(blkid -s UUID -o value /dev/mapper/cryptroot)
-sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=\$UUID:cryptroot root=UUID=$ROOTUUID\"|" /etc/default/grub
+ROOTUUID=$(blkid -s UUID -o value $PART2)
+CRYPTUUID=$(blkid -s UUID -o value /dev/mapper/cryptroot)
+sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$ROOTUUID:cryptroot root=UUID=$CRYPTUUID\"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
@@ -134,19 +148,7 @@ chmod +x install.sh
 sudo -u $USERNAME ./install.sh
 EOF
 
-# --- Dotfiles Deployment ---
-echo "[*] Installing yay"
-arch-chroot /mnt /bin/bash <<EOF
-cd /home/$USERNAME/
-git clone https://aur.archlinux.org/yay.git
-cd yay
-su #$USERNAME
-makepkg -si
-cd ..
-rm -rf yay
-EOF
-
 # --- Finished ---
 echo "[*] Installation Complete! Unmounting and Rebooting..."
-umount -R /mnt
+umount -R /mnt || echo "Warning: failed to unmount /mnt"
 reboot
