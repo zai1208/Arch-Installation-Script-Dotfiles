@@ -106,8 +106,9 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 
-UUID=\$(blkid -s UUID -o value ${DISK}p2)
-sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=\$UUID:cryptroot root=/dev/mapper/cryptroot\"|" /etc/default/grub
+ROOTUUID=$(blkid -s UUID -o value ${DISK}p2)
+UUID=$(blkid -s UUID -o value /dev/mapper/cryptroot)
+sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=\$UUID:cryptroot root=UUID=$ROOTUUID\"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
