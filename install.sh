@@ -19,17 +19,17 @@ parted --script $DISK \
     set 1 esp on \
     mkpart primary ext4 512MiB 100%
 
-mkfs.fat -F32 ${DISK}p1
+mkfs.fat -F32 ${DISK}1
 
-echo "[*] Setting up LUKS encryption on ${DISK}p2..."
-echo -n "$PASSWORD" | cryptsetup luksFormat ${DISK}p2 -
-echo -n "$PASSWORD" | cryptsetup open ${DISK}p2 cryptroot -
+echo "[*] Setting up LUKS encryption on ${DISK}2..."
+echo -n "$PASSWORD" | cryptsetup luksFormat ${DISK}2 -
+echo -n "$PASSWORD" | cryptsetup open ${DISK}2 cryptroot -
 
 mkfs.ext4 /dev/mapper/cryptroot
 
 # --- Mount Partitions ---
 mount /dev/mapper/cryptroot /mnt
-mount --mkdir ${DISK}p1 /mnt/boot
+mount --mkdir ${DISK}1 /mnt/boot
 
 # --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinuxarm-keyring)
