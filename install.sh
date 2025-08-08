@@ -31,13 +31,13 @@ else
 fi
 
 echo "[*] Setting up LUKS encryption on ${PART2}..."
-echo -n "$PASSWORD" | cryptsetup luksFormat ${PART2} -
-echo -n "$PASSWORD" | cryptsetup open ${PART2} cryptroot -
+echo -n "$PASSWORD" | cryptsetup -v luksFormat ${PART2} -
+echo -n "$PASSWORD" | cryptsetup open ${PART2} root -
 
-mkfs.ext4 /dev/mapper/cryptroot
+mkfs.ext4 /dev/mapper/root
 
 # --- Mount Partitions ---
-mount /dev/mapper/cryptroot /mnt
+mount /dev/mapper/root /mnt
 if [[ "$DISK" == *nvme* ]]; then
   mount --mkdir ${DISK}p1 /mnt/boot
 else
@@ -107,7 +107,7 @@ swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
 # Setup crypttab
-echo "cryptroot UUID=$(blkid -s UUID -o value $PART2) none luks" >> /etc/crypttab
+echo "root UUID=$(blkid -s UUID -o value $PART2) none luks" >> /etc/crypttab
 
 # Enable encrypt hook in mkinitcpio
 sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
@@ -120,9 +120,8 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 
-ROOTUUID=$(blkid -s UUID -o value $PART2)
-CRYPTUUID=$(blkid -s UUID -o value /dev/mapper/cryptroot)
-sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$ROOTUUID:cryptroot root=UUID=$CRYPTUUID\"|" /etc/default/grub
+
+sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$(blkid -s UUID -o value $PART2):root root=/dev/mapper/root"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
