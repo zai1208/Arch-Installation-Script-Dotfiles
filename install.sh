@@ -20,13 +20,9 @@ parted --script $DISK \
 
 if [[ "$DISK" == *nvme* ]]; then
   mkfs.fat -F32 ${DISK}p1
-else
-  mkfs.fat -F32 ${DISK}1
-fi
-
-if [[ "$DISK" == *nvme* ]]; then
   PART2="${DISK}p2"
 else
+  mkfs.fat -F32 ${DISK}1
   PART2="${DISK}2"
 fi
 
@@ -43,7 +39,6 @@ if [[ "$DISK" == *nvme* ]]; then
 else
   mount --mkdir ${DISK}1 /mnt/boot
 fi
-
 
 # --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinuxarm-keyring)
@@ -106,9 +101,6 @@ mkswap --size 4G --file /swapfile
 swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
-# Setup crypttab
-echo "root UUID=$(blkid -s UUID -o value $PART2) none luks" >> /etc/crypttab
-
 # Enable encrypt hook in mkinitcpio
 sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkinitcpio -P
@@ -120,8 +112,7 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 
-
-sed -i "s|GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$(blkid -s UUID -o value $PART2):root root=/dev/mapper/root"|" /etc/default/grub
+sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$(blkid -s UUID -o value $PART2):root root=/dev/mapper/root\"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
