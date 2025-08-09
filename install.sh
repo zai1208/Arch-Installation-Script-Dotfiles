@@ -1,44 +1,62 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+# Minimal interactive Arch (ARM) installer for UTM on M1 (UEFI + full-disk LUKS)
+# - Keeps your mapper name as `root`
+# - Uses cryptsetup -v
+# - Leaves your swapfile logic unchanged
+# NOTE: run this from an Arch/ArchARM live USB environment as root (e.g. archiso)
 
 # --- Interactive User Input ---
-read -rp "Enter target disk (e.g., /dev/nvme0n1): " DISK
+read -rp "Enter target disk (e.g., /dev/vda for UTM, or /dev/nvme0n1 for NVMe): " DISK
 read -rp "Enter hostname: " HOSTNAME
 read -rp "Enter username: " USERNAME
 read -s -rp "Enter password for $USERNAME (and root): " PASSWORD
 echo
 read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
 
+# sanity check
+if [[ ! -b "$DISK" ]]; then
+  echo "ERROR: disk $DISK not found. Aborting."
+  exit 1
+fi
+
 # --- Partition Disk ---
 echo "[*] Partitioning $DISK..."
-parted --script $DISK \
+parted --script "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 512MiB \
     set 1 esp on \
     mkpart primary ext4 512MiB 100%
 
-if [[ "$DISK" == *nvme* ]]; then
-  mkfs.fat -F32 ${DISK}p1
+# partition name helpers (nvme/mmcblk use p1/p2 nomenclature)
+if [[ "$DISK" == *nvme* || "$DISK" == *mmcblk* ]]; then
+  PART1="${DISK}p1"
   PART2="${DISK}p2"
 else
-  mkfs.fat -F32 ${DISK}1
+  PART1="${DISK}1"
   PART2="${DISK}2"
 fi
 
+echo "[*] FAT32 EFI -> $PART1"
+mkfs.fat -F32 "$PART1"
+
 echo "[*] Setting up LUKS encryption on ${PART2}..."
-echo -n "$PASSWORD" | cryptsetup -v luksFormat ${PART2} -
-echo -n "$PASSWORD" | cryptsetup open ${PART2} root -
+# Use -v and explicit --key-file=- to read passphrase from stdin
+# (keeps behaviour similar to your original script but uses --key-file for clarity)
+echo -n "$PASSWORD" | cryptsetup -v luksFormat --key-file=- "$PART2"
+echo -n "$PASSWORD" | cryptsetup -v open --type luks --key-file=- "$PART2" root
 
 mkfs.ext4 /dev/mapper/root
 
 # --- Mount Partitions ---
 mount /dev/mapper/root /mnt
-if [[ "$DISK" == *nvme* ]]; then
-  mount --mkdir ${DISK}p1 /mnt/boot
-else
-  mount --mkdir ${DISK}1 /mnt/boot
-fi
+mkdir -p /mnt/boot
+mount --mkdir "$PART1" /mnt/boot
+
+# capture UUID for the GRUB cmdline
+ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
+echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
 
 # --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinuxarm-keyring)
@@ -81,9 +99,10 @@ pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # --- Chroot & Configure System ---
-echo "[*] Configuring system..."
+echo "[*] Configuring system (chroot)..."
 
 arch-chroot /mnt /bin/bash <<EOF
+# timezone / locale
 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
 echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
@@ -91,32 +110,37 @@ locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "$HOSTNAME" > /etc/hostname
 
+# root + user
 echo "root:$PASSWORD" | chpasswd
-
 useradd -mG wheel $USERNAME
 echo "$USERNAME:$PASSWORD" | chpasswd
 echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
+# --- NOTE: swap setup preserved as requested ---
 mkswap --size 4G --file /swapfile
 swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
-# Enable encrypt hook in mkinitcpio
+# Ensure encrypt hook present for initramfs (keeps mapper name 'root')
+# This line replaces the HOOKS line - you can tweak as desired
 sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
-# Enable pacman eye-candy features
+# pacman eye-candy
 sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/pacman.conf
 
-# GRUB installation and configuration
+# GRUB (ARM UEFI)
 pacman -S --noconfirm grub efibootmgr
+# use /boot as the EFI directory (we mounted the FAT32 there earlier)
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 
-sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$(blkid -s UUID -o value $PART2):root root=/dev/mapper/root\"|" /etc/default/grub
+# Set GRUB kernel command line to use the cryptdevice=UUID=_device-UUID_:root format
+sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$ROOT_PART_UUID:root root=/dev/mapper/root\"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
+
 grub-mkconfig -o /boot/grub/grub.cfg
 
-# Enable autologin on tty1
+# tty1 autologin for user
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat <<EOL2 > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
@@ -130,13 +154,15 @@ EOF
 
 # --- Dotfiles Deployment ---
 echo "[*] Cloning dotfiles for $USERNAME..."
-arch-chroot /mnt /bin/bash <<EOF
+arch-chroot /mnt /bin/bash <<EOF2
 cd /home/$USERNAME/
-git clone https://github.com/zai1208/dotfiles.git
+if [ ! -d dotfiles ]; then
+  git clone https://github.com/zai1208/dotfiles.git
+fi
 cd dotfiles
-chmod +x install.sh
-sudo -u $USERNAME ./install.sh
-EOF
+chmod +x install.sh || true
+sudo -u $USERNAME ./install.sh || true
+EOF2
 
 # --- Finished ---
 echo "[*] Installation Complete! Unmounting and Rebooting..."
