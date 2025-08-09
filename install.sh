@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Minimal interactive Arch (ARM) installer for UTM on M1 (UEFI + full-disk LUKS)
-# - Keeps your mapper name as `root`
-# - Uses cryptsetup -v
-# - Leaves your swapfile logic unchanged
-# NOTE: run this from an Arch/ArchARM live USB environment as root (e.g. archiso)
-
 # --- Interactive User Input ---
 read -rp "Enter target disk (e.g., /dev/vda for UTM, or /dev/nvme0n1 for NVMe): " DISK
 read -rp "Enter hostname: " HOSTNAME
