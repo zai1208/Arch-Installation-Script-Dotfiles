@@ -53,8 +53,10 @@ ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
 echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
 
 # --- Pacstrap variables ---
+# Enable libvirt and install virtualization packages
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinux-keyring amd-ucode)
 DEV_PACKAGES=(git)
+VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
 APPS_PACKAGES=(atril chromium gimp feh)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pipewire-pulse pavucontrol bluez blueman networkmanager nm-connection-editor)
@@ -73,6 +75,9 @@ pacstrap -K /mnt "${BASE_PACKAGES[@]}"
 
 echo "[*] Installing Dev utilities + networkmanager with pacstrap..."
 pacstrap -K /mnt "${DEV_PACKAGES[@]}"
+
+echo "[*] Installing Virtualisation tools with pacstrap..."
+pacstrap -K /mnt "${VIRTUALISATION_PACKAGES[@]}"
 
 echo "[*] Installing Hyprland + apps needed by Hyprland with pacstrap..."
 pacstrap -K /mnt "${HYPRLAND_PACKAGES[@]}"
@@ -139,6 +144,17 @@ cat <<EOL2 > /etc/systemd/system/getty@tty1.service.d/override.conf
 ExecStart=
 ExecStart=-/usr/bin/agetty --autologin $USERNAME --noclear %I \\$TERM
 EOL2
+
+# Enable and start libvirtd service
+systemctl enable --now libvirtd
+
+# Add your user to libvirt group for permissions
+usermod -aG libvirt $USERNAME
+
+# Optional: Also add user to kvm group if it exists
+if getent group kvm >/dev/null; then
+  usermod -aG kvm $USERNAME
+fi
 
 systemctl enable NetworkManager
 systemctl enable cups.service
