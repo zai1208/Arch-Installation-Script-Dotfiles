@@ -56,7 +56,7 @@ echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
 # Enable libvirt and install virtualization packages
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp brightnessctl clight)
-DEV_PACKAGES=(git)
+DEV_PACKAGES=(git obsidian)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
 APPS_PACKAGES=(atril chromium gimp feh)
