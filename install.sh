@@ -194,6 +194,10 @@ systemctl enable cups.service
 systemctl enable tlp.service
 systemctl enable tlp-sleep.service
 systemctl enable clightd
+
+# Create Screenshots directory
+mkdir /home/$USERNAME/Screenshots
+
 EOF
 
 # --- Dotfiles Deployment ---
