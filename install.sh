@@ -150,7 +150,7 @@ ExecStart=-/usr/bin/agetty --autologin $USERNAME --noclear %I \\$TERM
 EOL2
 
 # Enable and start libvirtd service
-systemctl enable --now libvirtd
+systemctl enable libvirtd
 
 # Add your user to libvirt group for permissions
 usermod -aG libvirt $USERNAME
