@@ -1,3 +1,5 @@
+> [!IMPORTANT]
+> **Please, Please, Please** read the script _(or any script you find on the internet for that matter)_ before running it
 # Arch-Installation-Script-Dotfiles
 This is my personal Arch Installation script (it also installs my dotfiles)
 
