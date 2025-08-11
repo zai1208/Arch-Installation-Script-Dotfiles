@@ -55,6 +55,7 @@ echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
 # --- Pacstrap variables ---
 # Enable libvirt and install virtualization packages
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinux-keyring amd-ucode)
+LAPTOP_STUFF=(tlp brightnessctl clight)
 DEV_PACKAGES=(git)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
@@ -72,6 +73,9 @@ pacman -Sy archlinux-keyring --noconfirm
 # --- Pacstrap Installation ---
 echo "[*] Installing base system with pacstrap..."
 pacstrap -K /mnt "${BASE_PACKAGES[@]}"
+
+echo "[*] Installing laptop stuff with pacstrap..."
+pacstrap -K /mnt "${LAPTOP_STUFF[@]}"
 
 echo "[*] Installing Dev utilities + networkmanager with pacstrap..."
 pacstrap -K /mnt "${DEV_PACKAGES[@]}"
@@ -158,6 +162,9 @@ fi
 
 systemctl enable NetworkManager
 systemctl enable cups.service
+systemctl enable tlp.service
+systemctl enable tlp-sleep.service
+systemctl enable clightd
 EOF
 
 # --- Dotfiles Deployment ---
