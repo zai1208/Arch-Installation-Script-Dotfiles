@@ -149,8 +149,37 @@ ExecStart=
 ExecStart=-/usr/bin/agetty --autologin $USERNAME --noclear %I \\$TERM
 EOL2
 
+# Create the virsh net-autostart script
+cat <<'EOF2' > /usr/local/bin/virsh-net-autostart.sh
+#!/bin/bash
+virsh net-autostart default
+systemctl disable virsh-net-autostart.service
+rm -f /usr/local/bin/virsh-net-autostart.sh
+rm -f /etc/systemd/system/virsh-net-autostart.service
+EOF2
+chmod +x /usr/local/bin/virsh-net-autostart.sh
+
+# Create the systemd service
+cat <<'EOF2' > /etc/systemd/system/virsh-net-autostart.service
+[Unit]
+Description=Enable default libvirt network once
+After=network.target libvirtd.service
+Requires=libvirtd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/virsh-net-autostart.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF2
+
+# Enable the service
+systemctl enable virsh-net-autostart.service
+
 # Enable and start libvirtd service
-systemctl enable libvirtd
+systemctl enable --now libvirtd
 
 # Add your user to libvirt group for permissions
 usermod -aG libvirt $USERNAME
