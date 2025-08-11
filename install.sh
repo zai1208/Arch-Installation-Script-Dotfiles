@@ -5,7 +5,7 @@ set -euo pipefail
 read -rp "Enter target disk (e.g., /dev/vda for UTM, or /dev/nvme0n1 for NVMe): " DISK
 read -rp "Enter hostname: " HOSTNAME
 read -rp "Enter username: " USERNAME
-read -s -rp "Enter password for $USERNAME (and root): " PASSWORD
+read -s -rp "Enter password for $USERNAME, LUKS encryption, and root: " PASSWORD
 echo
 read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
 
