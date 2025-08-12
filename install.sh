@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- Colors ---
+CYAN='\e[36m'
+NC='\e[0m' # No Color
+
+log_info() {
+  echo -e "${CYAN}[*] $*${NC}"
+}
+
 # --- Interactive User Input ---
 read -rp "Enter target disk (e.g., /dev/vda for UTM, or /dev/nvme0n1 for NVMe): " DISK
 read -rp "Enter hostname: " HOSTNAME
@@ -16,7 +24,7 @@ if [[ ! -b "$DISK" ]]; then
 fi
 
 # --- Partition Disk ---
-echo "[*] Partitioning $DISK..."
+log_info "Partitioning $DISK..."
 parted --script "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 512MiB \
@@ -32,12 +40,10 @@ else
   PART2="${DISK}2"
 fi
 
-echo "[*] FAT32 EFI -> $PART1"
+log_info "FAT32 EFI -> $PART1"
 mkfs.fat -F32 "$PART1"
 
-echo "[*] Setting up LUKS encryption on ${PART2}..."
-# Use -v and explicit --key-file=- to read passphrase from stdin
-# (keeps behaviour similar to your original script but uses --key-file for clarity)
+log_info "Setting up LUKS encryption on ${PART2}..."
 echo -n "$PASSWORD" | cryptsetup -v luksFormat --key-file=- "$PART2"
 echo -n "$PASSWORD" | cryptsetup -v open --type luks --key-file=- "$PART2" root
 
@@ -50,10 +56,9 @@ mount --mkdir "$PART1" /mnt/boot
 
 # capture UUID for the GRUB cmdline
 ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
-echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
+log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 
 # --- Pacstrap variables ---
-# Enable libvirt and install virtualization packages
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp clight)
 DEV_PACKAGES=(git obsidian)
@@ -65,44 +70,44 @@ FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 EXTRA_PACKAGES=(fastfetch cmatrix)
 
 # --- Fix PGP Keyring Errors ---
-echo "[*] Re-initializing pacman keyring in live environment..."
+log_info "Re-initializing pacman keyring in live environment..."
 pacman-key --init
 pacman-key --populate archlinux
 pacman -Sy archlinux-keyring --noconfirm
 
 # --- Pacstrap Installation ---
-echo "[*] Installing base system with pacstrap..."
+log_info "Installing base system with pacstrap..."
 pacstrap -K /mnt "${BASE_PACKAGES[@]}"
 
-echo "[*] Installing laptop stuff with pacstrap..."
+log_info "Installing laptop stuff with pacstrap..."
 pacstrap -K /mnt "${LAPTOP_STUFF[@]}"
 
-echo "[*] Installing Dev utilities + networkmanager with pacstrap..."
+log_info "Installing Dev utilities + networkmanager with pacstrap..."
 pacstrap -K /mnt "${DEV_PACKAGES[@]}"
 
-echo "[*] Installing Virtualisation tools with pacstrap..."
+log_info "Installing Virtualisation tools with pacstrap..."
 pacstrap -K /mnt "${VIRTUALISATION_PACKAGES[@]}"
 
-echo "[*] Installing Hyprland + apps needed by Hyprland with pacstrap..."
+log_info "Installing Hyprland + apps needed by Hyprland with pacstrap..."
 pacstrap -K /mnt "${HYPRLAND_PACKAGES[@]}"
 
-echo "[*] Installing other apps with pacstrap..."
+log_info "Installing other apps with pacstrap..."
 pacstrap -K /mnt "${APPS_PACKAGES[@]}"
 
-echo "[*] Installing remaining utilities with pacstrap..."
+log_info "Installing remaining utilities with pacstrap..."
 pacstrap -K /mnt "${UTIL_PACKAGES[@]}"
 
-echo "[*] Installing fonts and cursor with pacstrap..."
+log_info "Installing fonts and cursor with pacstrap..."
 pacstrap -K /mnt "${FONT_CURSOR_PACKAGES[@]}"
 
-echo "[*] Installing extras with pacstrap..."
+log_info "Installing extras with pacstrap..."
 pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
 
 # --- Generate fstab ---
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # --- Chroot & Configure System ---
-echo "[*] Configuring system (chroot)..."
+log_info "Configuring system (chroot)..."
 
 arch-chroot /mnt /bin/bash <<EOF
 # timezone / locale
@@ -123,7 +128,7 @@ mkswap --size 4G --file /swapfile
 swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
-# Ensure encrypt hook present for initramfs (keeps mapper name 'root')
+# Ensure encrypt hook present for initramfs
 sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkinitcpio -P
 
@@ -132,13 +137,9 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 
 # GRUB
 pacman -S --noconfirm grub efibootmgr
-# use /boot as the EFI directory (we mounted the FAT32 there earlier)
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-
-# Set GRUB kernel command line to use the cryptdevice=UUID=_device-UUID_:root format
 sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$ROOT_PART_UUID:root root=/dev/mapper/root\"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
-
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # tty1 autologin for user
@@ -177,14 +178,8 @@ EOF2
 
 # Enable the service
 systemctl enable virsh-net-autostart.service
-
-# Enable and start libvirtd service
 systemctl enable --now libvirtd
-
-# Add your user to libvirt group for permissions
 usermod -aG libvirt $USERNAME
-
-# Optional: Also add user to kvm group if it exists
 if getent group kvm >/dev/null; then
   usermod -aG kvm $USERNAME
 fi
@@ -200,11 +195,10 @@ sudo -u $USERNAME bash <(curl -s https://raw.githubusercontent.com/lunarvim/luna
 
 # Create Screenshots directory
 mkdir /home/$USERNAME/Screenshots
-
 EOF
 
 # --- Dotfiles Deployment ---
-echo "[*] Cloning dotfiles for $USERNAME..."
+log_info "Cloning dotfiles for $USERNAME..."
 arch-chroot /mnt /bin/bash <<EOF2
 cd /home/$USERNAME/
 if [ ! -d dotfiles ]; then
@@ -216,6 +210,6 @@ sudo -u $USERNAME ./install.sh || true
 EOF2
 
 # --- Finished ---
-echo "[*] Installation Complete! Unmounting and Rebooting..."
+log_info "Installation Complete! Unmounting and Rebooting..."
 umount -R /mnt || echo "Warning: failed to unmount /mnt"
 reboot
