@@ -54,7 +54,7 @@ echo "[*] UUID of encrypted partition: $ROOT_PART_UUID"
 
 # --- Pacstrap variables ---
 # Enable libvirt and install virtualization packages
-BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages vim archlinux-keyring amd-ucode)
+BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp clight)
 DEV_PACKAGES=(git obsidian)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
@@ -194,6 +194,9 @@ systemctl enable cups.service
 systemctl enable tlp.service
 systemctl enable tlp-sleep.service
 systemctl enable clightd
+
+# Install LunarVim
+sudo -u $USERNAME bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
 
 # Create Screenshots directory
 mkdir /home/$USERNAME/Screenshots
