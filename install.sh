@@ -59,7 +59,7 @@ ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
 log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 
 # --- Pacstrap variables ---
-BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
+BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages helix archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp clight)
 DEV_PACKAGES=(git obsidian)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
