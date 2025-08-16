@@ -58,16 +58,17 @@ mount --mkdir "$PART1" /mnt/boot
 ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
 log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 
-# --- Pacstrap variables ---
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages helix archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp clight)
 DEV_PACKAGES=(git obsidian)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
-HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww thunar gtk4 hyprlock)
-APPS_PACKAGES=(atril qutebrowser gimp feh)
+HYPRLAND_PACKAGES=(hyprland waybar fuzzel alacritty swww hyprlock lf gtk4 ueberzugpp)
+APPS_PACKAGES=(zathura qutebrowser feh)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pipewire-pulse pavucontrol bluez blueman networkmanager nm-connection-editor brightnessctl grim slurp htop)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
+CAD_PACKAGES=(kicad inkscape freecad blender)
 EXTRA_PACKAGES=(fastfetch cmatrix)
+
 
 # --- Fix PGP Keyring Errors ---
 log_info "Re-initializing pacman keyring in live environment..."
