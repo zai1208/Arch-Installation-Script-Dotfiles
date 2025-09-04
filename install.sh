@@ -27,9 +27,9 @@ fi
 log_info "Partitioning $DISK..."
 parted --script "$DISK" \
     mklabel gpt \
-    mkpart ESP fat32 1MiB 512MiB \
+    mkpart ESP fat32 1MiB 1GiB \
     set 1 esp on \
-    mkpart primary ext4 512MiB 100%
+    mkpart primary ext4 1GiB 100%
 
 # partition name helpers (nvme/mmcblk use p1/p2 nomenclature)
 if [[ "$DISK" == *nvme* || "$DISK" == *mmcblk* ]]; then
