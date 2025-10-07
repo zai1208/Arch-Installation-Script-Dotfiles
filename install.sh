@@ -207,7 +207,7 @@ log_info "Cloning dotfiles for $USERNAME..."
 arch-chroot /mnt /bin/bash <<EOF2
 cd /home/$USERNAME/
 if [ ! -d dotfiles ]; then
-  sudo -u $USERNAME git clone https://github.com/zai1208/dotfiles.git
+  sudo -u $USERNAME git clone --recurse-submodules https://github.com/zai1208/dotfiles.git
 fi
 cd dotfiles
 chmod +x install.sh || true
