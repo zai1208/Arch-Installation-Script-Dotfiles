@@ -60,14 +60,15 @@ log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp clight)
-DEV_PACKAGES=(git fd ripgrep)
+DEV_PACKAGES=(git fd ripgrep zoxide)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel ghostty swww hyprlock yazi gtk4 hyprpolkitagent xdg-desktop-portal-hyprland)
-APPS_PACKAGES=(zathura qutebrowser feh)
+APPS_PACKAGES=(zathura nyxt feh)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pipewire-pulse pavucontrol bluez blueman networkmanager nm-connection-editor brightnessctl grim slurp htop system-config-printer fbgrab poppler bat)
 FONT_CURSOR_PACKAGES=(adwaita-cursors ttf-hack-nerd ttf-nerd-fonts-symbols)
 CAD_PACKAGES=(kicad inkscape freecad blender)
 EXTRA_PACKAGES=(fastfetch cmatrix)
+DEP_PACKAGES=(librsvg imagemagick)
 
 
 # --- Fix PGP Keyring Errors ---
@@ -103,6 +104,9 @@ pacstrap -K /mnt "${FONT_CURSOR_PACKAGES[@]}"
 
 log_info "Installing extras with pacstrap..."
 pacstrap -K /mnt "${EXTRA_PACKAGES[@]}"
+
+log_info "Installing extra dependencies with pacstrap..."
+pacstrap -K /mnt "${DEP_PACKAGES[@]}"
 
 # --- Generate fstab ---
 genfstab -U /mnt >> /mnt/etc/fstab
