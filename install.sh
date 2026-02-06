@@ -71,14 +71,6 @@ log_info "Mounting EFI partition..."
 mkdir -p /mnt/boot
 mount --mkdir "$PART1" /mnt/boot
 
-# --- Partition Disk ---
-log_info "Partitioning $DISK..."
-parted --script "$DISK" \
-    mklabel gpt \
-    mkpart ESP fat32 1MiB 1GiB \
-    set 1 esp on \
-    mkpart primary ext4 1GiB 100%
-
 # capture UUID for the GRUB cmdline
 ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
 log_info "UUID of encrypted partition: $ROOT_PART_UUID"
