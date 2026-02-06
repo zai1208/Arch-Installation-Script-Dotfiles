@@ -87,7 +87,7 @@ mkfs.ext4 /dev/Main/lv_arch_root
 
 if [[ "$DUALBOOT" = "y" ]]; then
   log_info "Formatting other OS root LV..."
-  mkfs.ext4 /dev/Main/$OSPARTNAME
+  mkfs.ext4 /dev/Main/"$OSPARTNAME" 
 fi
 
 # --- Mount Partitions ---
