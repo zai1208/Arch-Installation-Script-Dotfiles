@@ -47,6 +47,11 @@ log_info "Setting up LUKS encryption on ${PART2}..."
 echo -n "$PASSWORD" | cryptsetup -v luksFormat --key-file=- "$PART2"
 echo -n "$PASSWORD" | cryptsetup -v open --type luks --key-file=- "$PART2" root
 
+pvcreate /dev/mapper/root
+vgcreate Main /dev/mapper/root
+
+#TODO: Complete setting up LVM
+
 mkfs.ext4 /dev/mapper/root
 
 # --- Mount Partitions ---
