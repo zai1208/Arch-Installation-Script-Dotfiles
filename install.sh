@@ -23,6 +23,54 @@ if [[ ! -b "$DISK" ]]; then
   exit 1
 fi
 
+
+# --- Partition Disk ---
+log_info "Partitioning $DISK..."
+parted --script "$DISK" \
+    mklabel gpt \
+    mkpart ESP fat32 1MiB 1GiB \
+    set 1 esp on \
+    mkpart primary 1GiB 100%  # this will hold LUKS container
+
+# partition name helpers (nvme/mmcblk use p1/p2 nomenclature)
+if [[ "$DISK" == *nvme* || "$DISK" == *mmcblk* ]]; then
+  PART1="${DISK}p1"  # EFI
+  PART2="${DISK}p2"  # LUKS container
+else
+  PART1="${DISK}1"
+  PART2="${DISK}2"
+fi
+
+# --- Format EFI ---
+log_info "Formatting EFI partition -> $PART1"
+mkfs.fat -F32 "$PART1"
+
+# --- Setup LUKS ---
+log_info "Setting up LUKS encryption on $PART2..."
+echo -n "$PASSWORD" | cryptsetup -v luksFormat --key-file=- "$PART2"
+echo -n "$PASSWORD" | cryptsetup -v open --type luks --key-file=- "$PART2" root
+
+# --- Setup LVM inside LUKS ---
+log_info "Setting up LVM inside LUKS..."
+pvcreate /dev/mapper/root
+vgcreate Main /dev/mapper/root
+
+# Create logical volume
+log_info "Creating Arch root LV..."
+lvcreate -L 100%FREE -n lv_arch_root Main
+
+# Format the LV
+log_info "Formatting Arch root LV..."
+mkfs.ext4 /dev/Main/lv_arch_root
+
+# --- Mount Partitions ---
+log_info "Mounting Arch root LV..."
+mount /dev/Main/lv_arch_root /mnt
+
+log_info "Mounting EFI partition..."
+mkdir -p /mnt/boot
+mount --mkdir "$PART1" /mnt/boot
+
 # --- Partition Disk ---
 log_info "Partitioning $DISK..."
 parted --script "$DISK" \
@@ -30,34 +78,6 @@ parted --script "$DISK" \
     mkpart ESP fat32 1MiB 1GiB \
     set 1 esp on \
     mkpart primary ext4 1GiB 100%
-
-# partition name helpers (nvme/mmcblk use p1/p2 nomenclature)
-if [[ "$DISK" == *nvme* || "$DISK" == *mmcblk* ]]; then
-  PART1="${DISK}p1"
-  PART2="${DISK}p2"
-else
-  PART1="${DISK}1"
-  PART2="${DISK}2"
-fi
-
-log_info "FAT32 EFI -> $PART1"
-mkfs.fat -F32 "$PART1"
-
-log_info "Setting up LUKS encryption on ${PART2}..."
-echo -n "$PASSWORD" | cryptsetup -v luksFormat --key-file=- "$PART2"
-echo -n "$PASSWORD" | cryptsetup -v open --type luks --key-file=- "$PART2" root
-
-pvcreate /dev/mapper/root
-vgcreate Main /dev/mapper/root
-
-#TODO: Complete setting up LVM
-
-mkfs.ext4 /dev/mapper/root
-
-# --- Mount Partitions ---
-mount /dev/mapper/root /mnt
-mkdir -p /mnt/boot
-mount --mkdir "$PART1" /mnt/boot
 
 # capture UUID for the GRUB cmdline
 ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
