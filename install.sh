@@ -10,12 +10,26 @@ log_info() {
 }
 
 # --- Interactive User Input ---
+read -rp "Are you planning to dual boot with another system? (note that installing over an existing system is not supported yet) [y/N] " DUALBOOT
+
+# Default to "N" if empty
+DUALBOOT=${DUALBOOT:-N}
+
+# Convert to lowercase for case-insensitive comparison
+DUALBOOT=${DUALBOOT,,}  # Bash lowercase expansion
+
+if [[ "$DUALBOOT" == "y" ]]; then
+  read -rp "Enter name to use for partition of other OS (note that it must be installed afterwards): " OSPARTNAME
+  read -rp "How large do you want the partition of other OS (including units): " OSPARTSIZE
+fi
+
 read -rp "Enter target disk (e.g., /dev/vda for UTM, or /dev/nvme0n1 for NVMe): " DISK
 read -rp "Enter hostname: " HOSTNAME
 read -rp "Enter username: " USERNAME
 read -s -rp "Enter password for $USERNAME, LUKS encryption, and root: " PASSWORD
 echo
 read -rp "Enter your timezone (e.g., Australia/Sydney): " TIMEZONE
+
 
 # sanity check
 if [[ ! -b "$DISK" ]]; then
@@ -56,7 +70,15 @@ pvcreate /dev/mapper/root
 vgcreate Main /dev/mapper/root
 
 # Create logical volume
+
+
+if [[ "$DUALBOOT" = "y" ]]; then
+  log_info "Creating other OS root LV..."
+  lvcreate -L $OSPARTSIZE -n $OSPARTNAME
+fi
+
 log_info "Creating Arch root LV..."
+
 lvcreate -L 100%FREE -n lv_arch_root Main
 
 # Format the LV
