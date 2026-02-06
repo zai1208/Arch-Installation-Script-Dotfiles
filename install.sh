@@ -150,8 +150,8 @@ mkswap --size 4G --file /swapfile
 swapon /swapfile
 echo "/swapfile none swap defaults 0 0" >> /etc/fstab
 
-# Ensure encrypt hook present for initramfs
-sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap consolefont encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+# Ensure encrypt hook present for initramf
+sed -i 's|^HOOKS=.*|HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)|' /etc/mkinitcpio.conf
 mkinitcpio -P
 
 # pacman eye-candy
