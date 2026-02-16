@@ -103,7 +103,7 @@ ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
 log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
-LAPTOP_STUFF=(tlp clight)
+LAPTOP_STUFF=(tlp)
 DEV_PACKAGES=(git fd ripgrep zoxide)
 VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel ghostty swww hyprlock yazi gtk4 hyprpolkitagent xdg-desktop-portal-hyprland)
