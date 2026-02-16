@@ -74,7 +74,7 @@ vgcreate Main /dev/mapper/root
 
 if [[ "$DUALBOOT" = "y" ]]; then
   log_info "Creating other OS root LV..."
-  lvcreate -l "$OSPARTSIZE" -n "$OSPARTNAME" Main
+  lvcreate -L "$OSPARTSIZE" -n "$OSPARTNAME" Main
 fi
 
 log_info "Creating Arch root LV..."
