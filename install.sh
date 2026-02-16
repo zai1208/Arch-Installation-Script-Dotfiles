@@ -105,7 +105,7 @@ log_info "UUID of encrypted partition: $ROOT_PART_UUID"
 BASE_PACKAGES=(base base-devel linux linux-firmware man-db man-pages neovim archlinux-keyring amd-ucode)
 LAPTOP_STUFF=(tlp)
 DEV_PACKAGES=(git fd ripgrep zoxide)
-VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf bridge-utils dnsmasq virt-viewer)
+VIRTUALISATION_PACKAGES=(qemu libvirt virt-manager ovmf iproute2 dnsmasq virt-viewer)
 HYPRLAND_PACKAGES=(hyprland waybar fuzzel ghostty swww hyprlock yazi gtk4 hyprpolkitagent xdg-desktop-portal-hyprland)
 APPS_PACKAGES=(zathura nyxt feh)
 UTIL_PACKAGES=(cups cups-pdf cups-filters cups-pk-helper pipewire pipewire-pulse pavucontrol bluez blueman networkmanager nm-connection-editor brightnessctl grim slurp htop system-config-printer fbgrab poppler bat)
