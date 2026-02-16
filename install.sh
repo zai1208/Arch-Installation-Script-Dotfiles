@@ -95,8 +95,8 @@ log_info "Mounting Arch root LV..."
 mount /dev/Main/lv_arch_root /mnt
 
 log_info "Mounting EFI partition..."
-mkdir -p /mnt/boot
-mount --mkdir "$PART1" /mnt/boot
+mkdir -p /mnt/boot/efi
+mount --mkdir "$PART1" /mnt/boot/efi
 
 # capture UUID for the GRUB cmdline
 ROOT_PART_UUID=$(blkid -s UUID -o value "$PART2")
@@ -187,7 +187,7 @@ sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /etc/p
 # GRUB
 pacman -S --noconfirm grub efibootmgr
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$ROOT_PART_UUID:root root=/dev/mapper/root\"|" /etc/default/grub
+sed -i "s|^GRUB_CMDLINE_LINUX=\"\"|GRUB_CMDLINE_LINUX=\"rd.luks.name=$ROOT_PART_UUID=root \"|" /etc/default/grub
 echo "GRUB_ENABLE_CRYPTODISK=y" >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
