@@ -5,6 +5,9 @@
 # Arch-Installation-Script-Dotfiles
 This is my personal Arch Installation script (it also installs my dotfiles)
 
+> [!WARNING]
+> This is still filled with bugs so don't use it yet
+
 install using `bash <(curl -sSL https://tinyurl.com/zai1208-arch)` after connecting to internet and running `fdisk -l` to find the name of your disk
 
 Note that this script takes a long time to install (~40 minutes) so you may want to get a coffee or something after the initial prompts
